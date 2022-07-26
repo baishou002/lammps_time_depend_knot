@@ -1,0 +1,67 @@
+
+
+variable t index    6805565
+echo log
+
+units       lj
+dimension   3
+newton      on
+timestep    0.005
+
+boundary    ff ff ff
+atom_style  molecular
+
+neighbor 0.3 bin
+neigh_modify every 1 delay 1 check yes
+
+#读取聚合物链
+read_data  data.file
+
+mass   *        1
+
+
+# Potential information
+pair_style      lj/cut 2.806155
+pair_coeff      1 1 1.0 2.5 2.806155
+
+
+pair_modify     shift yes
+
+bond_style		fene
+bond_coeff		1 4.8 3.75 1.0 2.5
+special_bonds	fene
+
+angle_style cosine
+angle_coeff 1 21
+
+#minimize 1.0e-4 1.0e-6 10000 1000000
+#reset_timestep 0
+
+velocity all create 1.0 4928459 dist gaussian
+
+#thermo 1000
+#thermo_style custom step temp pe etotal press
+#fix 2 all langevin 1.0 1.0 2.0 699483 #zero yes
+fix wallxhi all wall/lj126 xhi EDGE 1.0 2.5 2.806155
+fix wallxlo all wall/lj126 xlo EDGE 1.0 2.5 2.806155
+fix wallyhi all wall/lj126 yhi EDGE 1.0 2.5 2.806155
+fix wallylo all wall/lj126 ylo EDGE 1.0 2.5 2.806155
+fix wallzhi all wall/lj126 zhi EDGE 1.0 2.5 2.806155
+fix wallzlo all wall/lj126 zlo EDGE 1.0 2.5 2.806155
+
+thermo 1000
+thermo_style custom step temp pe etotal press
+fix 1 all nve/limit 0.001
+run 10000
+unfix 1
+reset_timestep 0
+
+
+thermo 10000
+thermo_style custom step temp pe etotal press
+fix 3 all nve 
+fix 4 all langevin 1.0 1.0 2.0 $t #zero yes
+dump  1 all custom 10000 dump.lammpstrj id type mol x y z
+ 
+
+run 15000000
